@@ -2,20 +2,6 @@ import sys
 import yaml
 import psycopg2
 
-"""Следует поддерживать только работу с PostgreSQL.
-Сгенерировать DDL из схемы БД, заданной в формате YAML. На первом уровне
-схема содержит лишь названия сущностей и поля с типами.
-Гайдлайн по интерфейсу: конечному пользователю нужен примерно один метод
-(функция), который возвращает список стрингов со стейтментами, приняв имя файла
-со схемой.
-Ожидаемый результат — два стейтмента "create table", создающие соответствующие
-таблицы: article (с полями article_id, article_title, article_text) и category
-(category_id, category_title).
-Feature: timestamps
-В каждую таблицу при генерации добавляются поля created и updated (естественно,
-с правильными префиксами) и триггеры, которые будут поддерживать эти поля в
-актуальном состоянии."""
-
 SCHEMA_FILE_PATH = "/Users/savar/PycharmProjects/junior/db2/schema2.yaml"
 DATABASE_NAME = 'library'
 USER_NAME = 'savar'
