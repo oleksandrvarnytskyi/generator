@@ -2,7 +2,7 @@ CREATE TABLE "category" (
     "category_id" SERIAL PRIMARY KEY,
     "category_title" varchar(50),
     "category_created" timestamp NOT NULL DEFAULT now(),
-    "category_updated" timestamp NOT NULL DEFAULT now()
+    "category_updated" timestamp DEFAULT NULL
 );
 
 CREATE TABLE "article" (
@@ -10,14 +10,14 @@ CREATE TABLE "article" (
     "article_text" text,
     "article_title" varchar(50),
     "article_created" timestamp NOT NULL DEFAULT now(),
-    "article_updated" timestamp NOT NULL DEFAULT now()
+    "article_updated" timestamp DEFAULT NULL
 );
 
 CREATE TABLE "tag" (
     "tag_id" SERIAL PRIMARY KEY,
     "tag_value" varchar(50),
     "tag_created" timestamp NOT NULL DEFAULT now(),
-    "tag_updated" timestamp NOT NULL DEFAULT now()
+    "tag_updated" timestamp DEFAULT NULL
 );
 
 CREATE TABLE "article__tag" (
@@ -46,8 +46,6 @@ BEGIN
    RETURN NEW;
 END;
 $$ language 'plpgsql';
-CREATE TRIGGER "tr_category_updated" BEFORE UPDATE
-ON "category" FOR EACH ROW EXECUTE PROCEDURE update_category_timestamp();
 
 CREATE OR REPLACE FUNCTION update_article_timestamp()
 RETURNS TRIGGER AS $$
@@ -56,8 +54,6 @@ BEGIN
    RETURN NEW;
 END;
 $$ language 'plpgsql';
-CREATE TRIGGER "tr_article_updated" BEFORE UPDATE
-ON "article" FOR EACH ROW EXECUTE PROCEDURE update_article_timestamp();
 
 CREATE OR REPLACE FUNCTION update_tag_timestamp()
 RETURNS TRIGGER AS $$
@@ -66,6 +62,13 @@ BEGIN
    RETURN NEW;
 END;
 $$ language 'plpgsql';
+
+CREATE TRIGGER "tr_category_updated" BEFORE UPDATE
+ON "category" FOR EACH ROW EXECUTE PROCEDURE update_category_timestamp();
+
+CREATE TRIGGER "tr_article_updated" BEFORE UPDATE
+ON "article" FOR EACH ROW EXECUTE PROCEDURE update_article_timestamp();
+
 CREATE TRIGGER "tr_tag_updated" BEFORE UPDATE
 ON "tag" FOR EACH ROW EXECUTE PROCEDURE update_tag_timestamp();
 

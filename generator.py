@@ -2,20 +2,6 @@ import sys
 import yaml
 import psycopg2
 
-"""Следует поддерживать только работу с PostgreSQL.
-Сгенерировать DDL из схемы БД, заданной в формате YAML. На первом уровне
-схема содержит лишь названия сущностей и поля с типами.
-Гайдлайн по интерфейсу: конечному пользователю нужен примерно один метод
-(функция), который возвращает список стрингов со стейтментами, приняв имя файла
-со схемой.
-Ожидаемый результат — два стейтмента "create table", создающие соответствующие
-таблицы: article (с полями article_id, article_title, article_text) и category
-(category_id, category_title).
-Feature: timestamps
-В каждую таблицу при генерации добавляются поля created и updated (естественно,
-с правильными префиксами) и триггеры, которые будут поддерживать эти поля в
-актуальном состоянии."""
-
 SCHEMA_FILE_PATH = "/Users/savar/PycharmProjects/junior/db2/schema2.yaml"
 DATABASE_NAME = 'library'
 USER_NAME = 'savar'
@@ -24,7 +10,7 @@ CREATE_TABLE = """CREATE TABLE "{table_name}" (
     "{table_name}_id" SERIAL PRIMARY KEY,
     {fields},
     "{table_name}_created" timestamp NOT NULL DEFAULT now(),
-    "{table_name}_updated" timestamp NOT NULL DEFAULT now()
+    "{table_name}_updated" timestamp DEFAULT NULL
 );\n
 """
 CREATE_TABLE_SIBLINGS = """CREATE TABLE "{table}__{rel_table}" (
@@ -56,7 +42,7 @@ BEGIN
    RETURN NEW;
 END;
 $$ language 'plpgsql';
-"""
+\n"""
 
 CREATE_TRIGGER = """CREATE TRIGGER "tr_{table}_updated" BEFORE UPDATE
 ON "{table}" FOR EACH ROW EXECUTE PROCEDURE update_{table}_timestamp();\n
@@ -77,10 +63,10 @@ class Generator(object):
         try:
             con = psycopg2.connect(database=DATABASE_NAME, user=USER_NAME)
             cur = con.cursor()
+            con.c = True
             for tab in self.__tables:
                 drop_query = "DROP TABLE IF EXISTS {} CASCADE;".format(tab)
                 cur.execute(drop_query)
-            con.commit()
         except psycopg2.DatabaseError, e:
             if con:
                 con.rollback()
@@ -168,11 +154,14 @@ class Generator(object):
                                                    child=rel_tab)
             self.file_sql.write(alter_query)
 
-    def create_triggers(self, config_db):
+    def create_functions(self, config_db):
         for key in config_db.keys():
             function = CREATE_FUNCTION.format(table=key)
-            trigger = CREATE_TRIGGER.format(table=key)
             self.file_sql.write(function)
+
+    def create_triggers(self, config_db):
+        for key in config_db.keys():
+            trigger = CREATE_TRIGGER.format(table=key)
             self.file_sql.write(trigger)
 
     def file_sql_creator(self):
@@ -181,6 +170,7 @@ class Generator(object):
         db_config = dict((k.lower(), v) for k, v in db_config.items())
         self.__tables = db_config.keys()
         self.create_tables(db_config)
+        self.create_functions(db_config)
         self.create_triggers(db_config)
 
         self.file_sql.close()
