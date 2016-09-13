@@ -63,7 +63,7 @@ class Generator(object):
         try:
             con = psycopg2.connect(database=DATABASE_NAME, user=USER_NAME)
             cur = con.cursor()
-            con.c = True
+            con.autocommit = True
             for tab in self.__tables:
                 drop_query = "DROP TABLE IF EXISTS {} CASCADE;".format(tab)
                 cur.execute(drop_query)
@@ -181,4 +181,4 @@ if __name__ == "__main__":
 
     gen = Generator(name_sql_file)
     gen.file_sql_creator()
-    gen.drop_tables()
+    # gen.drop_tables()
