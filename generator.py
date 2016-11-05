@@ -68,8 +68,6 @@ class Generator(object):
                 drop_query = "DROP TABLE IF EXISTS {} CASCADE;".format(tab)
                 cur.execute(drop_query)
         except psycopg2.DatabaseError, e:
-            if con:
-                con.rollback()
             print 'Error %s' % e
             sys.exit(1)
         finally:
